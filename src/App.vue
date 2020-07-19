@@ -60,9 +60,10 @@
           <div class="title is-5 underline">
             Graph Details
           </div>
+          <p><b>UPN:</b> {{ graphDetails.userPrincipalName }}</p>
+          <p><b>ID:</b> {{ graphDetails.id }}</p>
           <p><b>Job Title:</b> {{ graphDetails.jobTitle }}</p>
           <p><b>Location:</b> {{ graphDetails.officeLocation }}</p>
-          <p><b>UPN:</b> {{ graphDetails.userPrincipalName }}</p>
           <p><b>Mobile:</b> {{ graphDetails.mobilePhone }}</p>
           <p><b>Department:</b> {{ graphDetails.department }}</p>
           <button class="button is-success is-fullwidth mt-2" @click="showGraphDetails = true">
