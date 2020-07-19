@@ -29,8 +29,6 @@ az ad app create --display-name="Graph Demo App" \
 --available-to-other-tenants=true \
 --query "appId" -o tsv
 ```
-Make a note of the GUID returned, this is the app ID
-
 Make a note of the GUID returned, this is the app ID, or client ID
 
 Copy `.env.local.sample` to `.env.local` and place the app ID in the setting `VUE_APP_CLIENT_ID`
@@ -43,7 +41,7 @@ Copy `.env.local.sample` to `.env.local` and place the app ID in the setting `VU
  - `VUE_APP_TOKEN_SCOPES` - *Optional.* Customize the scopes requested for accessToken
 
 ### Docker
-There is a Dockerfile to build the app and serve it via NGINX. The Azure AD client ID needs to be set at build time (as this is a React app)
+There is a Dockerfile to build the app and serve it via NGINX. The Azure AD client ID needs to be set at build time (as this is a Vue.js app)
 
 Run from root of project, and set CLIENT_ID and image tag as required
 ```bash
