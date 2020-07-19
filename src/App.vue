@@ -1,168 +1,180 @@
 <template>
   <div id="app">
-    <h1 class="title">
-      Graph API - Directory Lookup
-    </h1>
-
-    <article v-if="error" class="message is-danger">
-      <div class="message-header">
-        <p><i class="fas fa-exclamation-circle" /> Error 😢</p>
-        <button class="delete" aria-label="delete" />
+    <section class="hero is-primary is-bold">
+      <div class="hero-body">
+        <h1 class="title">
+          <img src="./assets/logo.svg" alt="logo" class="ml-4">MSAL and Microsoft Graph Demo
+        </h1>
       </div>
-      <div class="message-body">
+      <span class="gitlink is-2 title"><a href="https://github.com/benc-uk/msal-graph-vue"><i class="fab fa-github fa-fw" /></a></span>
+    </section>
+
+    <div class="container is-fluid">
+      <div v-if="error" class="notification is-danger is-4 title">
         {{ error }}
       </div>
-    </article>
 
-    <button v-if="!token && !error" class="button is-info" @click="login">
-      LOGIN <i class="fas fa-user fa-fw" />
-    </button>
+      <Login v-if="!user && !error" @loginComplete="user = authGetAccount()" />
 
-    <p v-if="token" class="control has-icons-left">
-      <input v-model="search" class="input is-success is-rounded has-icons-left" style="width: 20rem">
-      <span class="icon is-small is-left">
-        <i class="fas fa-search" />
-      </span>
-    </p>
-
-    <table v-if="results && !error" class="table is-striped is-hoverable">
-      <thead>
-        <tr>
-          <th>Display Name</th><th>Names</th><th>Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in results" :key="user.id" @click="selectUser(user)">
-          <td>{{ user.displayName }}</td><td>{{ user.givenName }} {{ user.surname }}</td><td>{{ user.mail }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div v-if="selectedUser" class="modal is-active">
-      <div class="modal-background " />
-      <div class="modal-card">
-        <header class="modal-card-head has-background-info">
-          <p class="modal-card-title has-text-light">
-            <i class="fa fa-user fa-fw" /> User Details
-          </p>
-          <button class="delete" aria-label="close" @click="selectedUser=null" />
-        </header>
-        <section class="modal-card-body">
-          <pre>
-{{ selectedUser }}
-          </pre>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-success" @click="selectedUser=null">
-            OK
+      <div v-if="user && !error" class="columns is-multiline">
+        <div class="column">
+          <div class="title is-5 underline">
+            Account &amp; Tokens
+          </div>
+          <p><b>Name:</b> {{ user.name }}</p>
+          <p><b>Username:</b> {{ user.userName }}</p><br>
+          <button class="button is-success is-fullwidth mt-2" @click="showUserDetails = true">
+            <span class="icon">
+              <i class="fas fa-user fa-fw" />
+            </span>
+            <span>ID Token &amp; Account</span>
           </button>
-        </footer>
+          <button class="button is-success is-fullwidth mt-2" @click="showTokenDetails = true">
+            <span class="icon">
+              <i class="fas fa-code fa-fw" />
+            </span>
+            <span>Access Token</span>
+          </button>
+
+          <div class="columns mt-2">
+            <div class="column">
+              <button class="button is-warning is-fullwidth" @click="shallowLogout">
+                <span class="icon">
+                  <i class="fas fa-sign-out-alt fa-fw" />
+                </span>
+                <span>Logout (Local)</span>
+              </button>
+            </div>
+            <div class="column">
+              <button class="button is-warning is-fullwidth" @click="authLogout">
+                <span class="icon">
+                  <i class="fas fa-door-open fa-fw" />
+                </span>
+                <span>Logout (Full)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="graphDetails" class="column">
+          <div class="title is-5 underline">
+            Graph Details
+          </div>
+          <p><b>Job Title:</b> {{ graphDetails.jobTitle }}</p>
+          <p><b>Location:</b> {{ graphDetails.officeLocation }}</p>
+          <p><b>UPN:</b> {{ graphDetails.userPrincipalName }}</p>
+          <p><b>Mobile:</b> {{ graphDetails.mobilePhone }}</p>
+          <p><b>Department:</b> {{ graphDetails.department }}</p>
+          <button class="button is-success is-fullwidth mt-2" @click="showGraphDetails = true">
+            <span class="icon">
+              <i class="fas fa-address-card fa-fw" />
+            </span>
+            <span>Full Graph Result</span>
+          </button>
+        </div>
+
+        <div v-if="graphPhoto" class="column">
+          <div class="title is-5 underline">
+            Photo
+          </div>
+          <p><img class="graphphoto" :src="graphPhoto" alt="user"></p>
+        </div>
+
+        <div class="column is-full">
+          <Search :user="user" :access-token="accessToken" />
+        </div>
       </div>
     </div>
+
+    <DetailsModal :content="JSON.stringify(user, null, 2)" title="Account &amp; ID Token Details" :shown="showUserDetails" @close="showUserDetails = false" />
+
+    <DetailsModal :content="JSON.stringify(graphDetails, null, 2)" title="Full Graph Details" :shown="showGraphDetails" @close="showGraphDetails = false" />
+
+    <DetailsModal :content="accessToken" title="Access Token Raw Value" :wrap="true" link="https://jwt.ms" :shown="showTokenDetails" @close="showTokenDetails = false" />
   </div>
 </template>
 
 <script>
-import * as msal from 'msal'
-import axios from 'axios'
-import _ from 'lodash'
-
-const msalApp = new msal.UserAgentApplication({
-  auth: {
-    clientId: process.env.VUE_APP_CLIENT_ID,
-    redirectUri: window.location.origin,
-
-  },
-  cache: {
-    cacheLocation: 'localStorage',
-    storeAuthStateInCookie: true
-  }
-})
-const accessTokenRequest = { scopes: ['User.Read', 'User.ReadBasic.All'] }
+import auth from './mixins/auth'
+import graph from './mixins/graph'
+import Login from './components/Login'
+import DetailsModal from './components/DetailsModal'
+import Search from './components/Search'
 
 export default {
   name: 'App',
 
+  components: { Login, DetailsModal, Search },
+
+  // We make heavy use of these two mixins
+  mixins: [ auth, graph ],
+
   data: function() {
     return {
-      results: null,
-      search: null,
-      token: null,
-      error: null,
-      selectedUser: null
+      // User account object synced with MSAL getAccount()
+      user: {},
+      // Access token fetched via MSAL for calling Graph API
+      accessToken: '',
+
+      // Details fetched from Graph API, user object and photo
+      graphDetails: null,
+      graphPhoto: null,
+
+      // Visibility toggles for the three details modal popups
+      showUserDetails: false,
+      showGraphDetails: false,
+      showTokenDetails: false,
+
+      // Any errors
+      error: ''
     }
   },
 
   watch: {
-    // Watch the search field and run a Graph search with a debounce
-    search(newVal) {
-      if (newVal.trim()) { this.searchDebounce(newVal) }
-    }
+    // If user changes, make calls to Graph API
+    'user': async function () {
+      this.fetchGraphDetails()
+    },
   },
 
-  async mounted() {
-    if (!process.env.VUE_APP_CLIENT_ID || process.env.VUE_APP_CLIENT_ID == 'CHANGE_ME') {
-      this.error = 'VUE_APP_CLIENT_ID has not been configured!'
-      return
-    }
+  async created() {
+    // Basic setup of MSAL helper with client id, or give up
+    if (process.env.VUE_APP_CLIENT_ID) {
+      console.log(`### Azure AD sign-in: enabled. Using clientId: ${process.env.VUE_APP_CLIENT_ID}`)
+      this.authConfigure(process.env.VUE_APP_CLIENT_ID)
 
-    // Try to reuse cached user
-    let tokenResp = await msalApp.acquireTokenSilent(accessTokenRequest)
-    if (tokenResp) {
-      console.log('### MSAL acquireTokenSilent was successful')
-      this.token = tokenResp.accessToken
+      this.user = this.authGetAccount()
+    } else {
+      this.error = 'VUE_APP_CLIENT_ID is not set, the app will not function! 😥'
     }
   },
 
   methods: {
-    selectUser(user) {
-      this.selectedUser = user
+    // Remove locally held user details, is same as logout
+    shallowLogout() {
+      this.user = null
+      this.graphDetails = null
+      this.userDetails = null
+      this.graphPhoto = null
+      this.authClearLocalUser()
     },
 
-    // Lodash debounce wrapper around the HTTP call to the Graph
-    searchDebounce: _.debounce(async function(searchString) {
-      // Just in case
-      if (!this.token) { return }
+    // Get an access token and call graphGetSelf & graphGetPhoto
+    async fetchGraphDetails() {
+      if (!this.user) { return }
 
-      // Construct Graph query
       try {
-        let resp = await axios.get(`https://graph.microsoft.com/v1.0/users?$filter=startswith(displayName, '${searchString}') or startswith(userPrincipalName, '${searchString}')`,
-          {
-            headers: { Authorization: `Bearer ${this.token}` }
-          })
+        // Acquire an access token to call APIs (like Graph)
+        // Safe to call repeatedly as MSAL caches stuff locally
+        const scopes = JSON.parse(process.env.VUE_APP_TOKEN_SCOPES || null) || [ 'user.read', 'user.readbasic.all' ]
+        this.accessToken = await this.authAcquireToken(scopes)
 
-        // Update results with data returned
-        if (resp && resp.data && resp.data.value) {
-          this.results = resp.data.value
-        } else {
-          this.error = 'Graph call failed, no data returned'
+        if (this.accessToken) {
+          this.graphDetails = await this.graphGetSelf(this.accessToken)
+          this.graphPhoto = await this.graphGetPhoto(this.accessToken)
         }
       } catch (err) {
         this.error = err.toString()
-      }
-    }, 200),
-
-    // Log user in with MSAL and Azure AD
-    async login() {
-      let tokenResp = null
-      // 1. Login with popup
-      await msalApp.loginPopup({ scopes: [ 'user.read' ], prompt: 'select_account' })
-      console.log('### MSAL loginPopup was successful')
-      try {
-        // 2. Try to aquire token silently
-        tokenResp = await msalApp.acquireTokenSilent(accessTokenRequest)
-        console.log('### MSAL acquireTokenSilent was successful')
-      } catch (tokenErr) {
-        // 3. Silent process might have failed so try via popup
-        tokenResp = await msalApp.acquireTokenPopup(accessTokenRequest)
-        console.log('### MSAL acquireTokenPopup was successful')
-      }
-
-      // Store access token in state
-      if (tokenResp) {
-        this.token = tokenResp.accessToken
-      } else {
-        this.error = `Failed to get access token ${JSON.stringify(tokenResp)}`
       }
     }
   }
@@ -170,11 +182,32 @@ export default {
 </script>
 
 <style>
-  body {
-    padding: 1rem;
-  }
+.hero-body img {
+  width: 80px;
+  vertical-align: middle;
+  padding-right: 1rem;
+}
 
-  tr {
-    cursor: pointer;
-  }
+.hero-body {
+  padding: 0.5rem;
+}
+
+.hero {
+  margin-bottom: 1rem;
+}
+
+.graphphoto {
+  border-radius: 15px;
+}
+
+.underline {
+  border-bottom: 3px solid #bbb;
+}
+
+.gitlink, .gitlink a:visited {
+  position: absolute;
+  top: 0.8rem;
+  right: 1rem;
+  color: #333436;
+}
 </style>

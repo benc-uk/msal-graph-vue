@@ -9,5 +9,5 @@
   },
   "eslint.workingDirectories": [
     "./src"
-  ]
+  ],
 }
