@@ -46,13 +46,15 @@ export default {
     // https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL
     //
     graphSearchUsers: async function (searchString, accessToken, max = 50) {
+      let url = `${GRAPH_BASE}/users?$filter=startswith(displayName, '${searchString}') or startswith(userPrincipalName, '${searchString}')&$top=${max}`
+
       let searchResp = await fetch(
-        `${GRAPH_BASE}/users?$filter=startswith(displayName, '${searchString}') or startswith(userPrincipalName, '${searchString}')&$top=${max}`,
+        url,
         {
           headers: { authorization: `bearer ${accessToken}` }
         }
       )
-      if (!searchResp.ok) { throw new Error(`Graph call to '${GRAPH_BASE}/users' failed with '${searchResp.statusText}'`) }
+      if (!searchResp.ok) { throw new Error(`Graph call to '${url}' failed with '${searchResp.statusText}'`) }
       let data = await searchResp.json()
       return data
     }

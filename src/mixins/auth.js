@@ -81,7 +81,6 @@ export default {
     // Login a user with a popup
     //
     authLogin: async function() {
-      // Login step
       await msalApp.loginPopup({
         scopes: LOGIN_SCOPES,
         prompt: 'select_account'

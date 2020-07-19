@@ -143,6 +143,7 @@ export default {
       console.log(`### Azure AD sign-in: enabled. Using clientId: ${process.env.VUE_APP_CLIENT_ID}`)
       this.authConfigure(process.env.VUE_APP_CLIENT_ID)
 
+      // Restore any cached or saved local user
       this.user = this.authGetAccount()
     } else {
       this.error = 'VUE_APP_CLIENT_ID is not set, the app will not function! 😥'

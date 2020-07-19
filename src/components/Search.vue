@@ -9,8 +9,8 @@
       Directory search not supported for personal accounts, sorry!
     </div>
 
-    <div v-if="error" class="notification is-warning mt-4">
-      {{ error }}
+    <div v-if="error" class="notification is-danger mt-4">
+      ⚠ {{ error }}
     </div>
 
     <table v-if="users" class="table is-striped is-hoverable is-fullwidth">
