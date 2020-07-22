@@ -61,6 +61,7 @@ npm install
 ```
 npm run serve
 ```
+Local server runs on `http://localhost:8080` by default
 
 ### Compiles and minifies for production
 ```

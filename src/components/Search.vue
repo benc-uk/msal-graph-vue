@@ -30,12 +30,10 @@
 
 <script>
 import _ from 'lodash'
-import graph from '../mixins/graph'
+import graph from '../services/graph'
 
 export default {
   name: 'Search',
-
-  mixins: [ graph ],
 
   props: {
     user: {
@@ -76,7 +74,7 @@ export default {
       if (!this.accessToken) { return }
 
       try {
-        let searchRes = await this.graphSearchUsers(searchString, this.accessToken, 25)
+        let searchRes = await graph.searchUsers(searchString, 25)
         this.users = searchRes.value
       } catch (err) {
         this.error = err.toString()
