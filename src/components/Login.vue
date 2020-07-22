@@ -17,10 +17,9 @@
 </template>
 
 <script>
-import auth from '../mixins/auth'
+import auth from '../services/auth'
 
 export default {
-  mixins: [ auth ],
 
   data: function() {
     return {
@@ -31,7 +30,7 @@ export default {
   methods: {
     async doLogin() {
       try {
-        await this.authLogin()
+        await auth.login()
         this.$emit('loginComplete')
       } catch (err) {
         this.error = err.toString()

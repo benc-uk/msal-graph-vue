@@ -14,7 +14,7 @@
         {{ error }}
       </div>
 
-      <Login v-if="!user && !error" @loginComplete="user = authGetAccount()" />
+      <Login v-if="!user && !error" @loginComplete="updateUser" />
 
       <div v-if="user && !error" class="columns is-multiline">
         <div class="column">
@@ -46,7 +46,7 @@
               </button>
             </div>
             <div class="column">
-              <button class="button is-warning is-fullwidth" @click="authLogout">
+              <button class="button is-warning is-fullwidth" @click="fullLogout">
                 <span class="icon">
                   <i class="fas fa-door-open fa-fw" />
                 </span>
@@ -96,8 +96,8 @@
 </template>
 
 <script>
-import auth from './mixins/auth'
-import graph from './mixins/graph'
+import auth from './services/auth'
+import graph from './services/graph'
 import Login from './components/Login'
 import DetailsModal from './components/DetailsModal'
 import Search from './components/Search'
@@ -106,9 +106,6 @@ export default {
   name: 'App',
 
   components: { Login, DetailsModal, Search },
-
-  // We make heavy use of these two mixins
-  mixins: [ auth, graph ],
 
   data: function() {
     return {
@@ -141,24 +138,33 @@ export default {
   async created() {
     // Basic setup of MSAL helper with client id, or give up
     if (process.env.VUE_APP_CLIENT_ID) {
-      console.log(`### Azure AD sign-in: enabled. Using clientId: ${process.env.VUE_APP_CLIENT_ID}`)
-      this.authConfigure(process.env.VUE_APP_CLIENT_ID)
+      auth.configure(process.env.VUE_APP_CLIENT_ID)
 
       // Restore any cached or saved local user
-      this.user = this.authGetAccount()
+      this.user = auth.user()
     } else {
       this.error = 'VUE_APP_CLIENT_ID is not set, the app will not function! 😥'
     }
   },
 
   methods: {
+    // Update user from MSAL
+    updateUser() {
+      this.user = auth.user()
+    },
+
     // Remove locally held user details, is same as logout
     shallowLogout() {
       this.user = null
       this.graphDetails = null
       this.userDetails = null
       this.graphPhoto = null
-      this.authClearLocalUser()
+      auth.clearLocal()
+    },
+
+    // Full logout local & server side
+    fullLogout() {
+      auth.logout
     },
 
     // Get an access token and call graphGetSelf & graphGetPhoto
@@ -166,17 +172,11 @@ export default {
       if (!this.user) { return }
 
       try {
-        // Acquire an access token to call APIs (like Graph)
-        // Safe to call repeatedly as MSAL caches stuff locally
-        const scopes = JSON.parse(process.env.VUE_APP_TOKEN_SCOPES || null) || [ 'user.read', 'user.readbasic.all' ]
-        this.accessToken = await this.authAcquireToken(scopes)
-
-        if (this.accessToken) {
-          this.graphDetails = await this.graphGetSelf(this.accessToken)
-          this.graphPhoto = await this.graphGetPhoto(this.accessToken)
-        }
+        this.graphDetails = await graph.getSelf()
+        this.graphPhoto = await graph.getPhoto()
+        this.accessToken = graph.getAccessToken()
       } catch (err) {
-        this.error = err.toString()
+        this.error = err
       }
     }
   }
