@@ -8,7 +8,7 @@
 import auth from './auth'
 
 const GRAPH_BASE = 'https://graph.microsoft.com/beta'
-const GRAPH_SCOPES = [ 'user.read', 'user.readbasic.all' ]
+const GRAPH_SCOPES = ['user.read', 'user.readbasic.all']
 
 let accessToken
 
@@ -42,7 +42,9 @@ export default {
   // https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL
   //
   async searchUsers(searchString, max = 50) {
-    let resp = await callGraph(`/users?$filter=startswith(displayName, '${searchString}') or startswith(userPrincipalName, '${searchString}')&$top=${max}`)
+    let resp = await callGraph(
+      `/users?$filter=startswith(displayName, '${searchString}') or startswith(userPrincipalName, '${searchString}')&$top=${max}`
+    )
     if (resp) {
       let data = await resp.json()
       return data
@@ -65,14 +67,13 @@ async function callGraph(apiPath) {
   // Safe to call repeatedly as MSAL caches tokens locally
   accessToken = await auth.acquireToken(GRAPH_SCOPES)
 
-  let resp = await fetch(
-    `${GRAPH_BASE}${apiPath}`,
-    {
-      headers: { authorization: `bearer ${accessToken}` }
-    }
-  )
+  let resp = await fetch(`${GRAPH_BASE}${apiPath}`, {
+    headers: { authorization: `bearer ${accessToken}` }
+  })
 
-  if (!resp.ok) { throw new Error(`Call to ${GRAPH_BASE}${apiPath} failed: ${resp.statusText}`) }
+  if (!resp.ok) {
+    throw new Error(`Call to ${GRAPH_BASE}${apiPath} failed: ${resp.statusText}`)
+  }
 
   return resp
 }

@@ -2,11 +2,11 @@
   <div id="app">
     <section class="hero is-primary is-bold">
       <div class="hero-body">
-        <h1 class="title">
-          <img src="./assets/logo.svg" alt="logo" class="ml-4">MSAL and Microsoft Graph Demo
-        </h1>
+        <h1 class="title"><img src="./assets/logo.svg" alt="logo" class="ml-4" />MSAL and Microsoft Graph Demo</h1>
       </div>
-      <span class="gitlink is-2 title"><a href="https://github.com/benc-uk/msal-graph-vue"><i class="fab fa-github fa-fw" /></a></span>
+      <span class="gitlink is-2 title"
+        ><a href="https://github.com/benc-uk/msal-graph-vue"><i class="fab fa-github fa-fw"/></a
+      ></span>
     </section>
 
     <div class="container is-fluid">
@@ -22,7 +22,8 @@
             Account &amp; Tokens
           </div>
           <p><b>Name:</b> {{ user.name }}</p>
-          <p><b>Username:</b> {{ user.userName }}</p><br>
+          <p><b>Username:</b> {{ user.username }}</p>
+          <br />
           <button class="button is-success is-fullwidth mt-2" @click="showUserDetails = true">
             <span class="icon">
               <i class="fas fa-user fa-fw" />
@@ -78,7 +79,7 @@
           <div class="title is-5 underline">
             Photo
           </div>
-          <p><img class="graphphoto" :src="graphPhoto" alt="user"></p>
+          <p><img class="graphphoto" :src="graphPhoto" alt="user" /></p>
         </div>
 
         <div class="column is-full">
@@ -87,11 +88,28 @@
       </div>
     </div>
 
-    <DetailsModal :content="JSON.stringify(user, null, 2)" title="Account &amp; ID Token Details" :shown="showUserDetails" @close="showUserDetails = false" />
+    <DetailsModal
+      :content="JSON.stringify(user, null, 2)"
+      title="Account &amp; ID Token Details"
+      :shown="showUserDetails"
+      @close="showUserDetails = false"
+    />
 
-    <DetailsModal :content="JSON.stringify(graphDetails, null, 2)" title="Full Graph Details" :shown="showGraphDetails" @close="showGraphDetails = false" />
+    <DetailsModal
+      :content="JSON.stringify(graphDetails, null, 2)"
+      title="Full Graph Details"
+      :shown="showGraphDetails"
+      @close="showGraphDetails = false"
+    />
 
-    <DetailsModal :content="accessToken" title="Access Token Raw Value" :wrap="true" link="https://jwt.ms" :shown="showTokenDetails" @close="showTokenDetails = false" />
+    <DetailsModal
+      :content="accessToken"
+      title="Access Token Raw Value"
+      :wrap="true"
+      link="https://jwt.ms"
+      :shown="showTokenDetails"
+      @close="showTokenDetails = false"
+    />
   </div>
 </template>
 
@@ -130,9 +148,9 @@ export default {
 
   watch: {
     // If user changes, make calls to Graph API
-    'user': async function () {
+    user: async function() {
       this.fetchGraphDetails()
-    },
+    }
   },
 
   async created() {
@@ -164,12 +182,14 @@ export default {
 
     // Full logout local & server side
     fullLogout() {
-      auth.logout
+      auth.logout()
     },
 
     // Get an access token and call graphGetSelf & graphGetPhoto
     async fetchGraphDetails() {
-      if (!this.user) { return }
+      if (!this.user) {
+        return
+      }
 
       try {
         this.graphDetails = await graph.getSelf()
@@ -206,7 +226,8 @@ export default {
   border-bottom: 3px solid #bbb;
 }
 
-.gitlink, .gitlink a:visited {
+.gitlink,
+.gitlink a:visited {
   position: absolute;
   top: 0.8rem;
   right: 1rem;
