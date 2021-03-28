@@ -1,5 +1,13 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) Ben Coleman, 2021
+// Licensed under the MIT License.
+//
+// Drop in MSAL.js 2.x service wrapper & helper for SPAs
+//   v2.1.0 - Ben Coleman 2019
+//   Updated 2021 - Switched to @azure/msal-browser
+// ----------------------------------------------------------------------------
+
 import * as msal from '@azure/msal-browser'
-//import * as msal from 'msal'
 
 // MSAL object used for signing in users with MS identity platform
 let msalApp
@@ -8,26 +16,28 @@ export default {
   //
   // Configure with clientId or empty string/null to set in "demo" mode
   //
-  async configure(clientId) {
+  async configure(clientId, enableDummyUser = true) {
     // Can only call configure once
     if (msalApp) {
       return
     }
 
-    // If no clientId provided then create a mock MSAL UserAgentApplication
+    // If no clientId provided & enableDummyUser then create a mock MSAL UserAgentApplication
     // Allows us to run without Azure AD for demos & local dev
-    if (!clientId) {
+    if (!clientId && enableDummyUser) {
       console.log('### Azure AD sign-in: disabled. Will run in demo mode with dummy demo@example.net account')
 
       const dummyUser = {
         accountIdentifier: 'e11d4d0c-1c70-430d-a644-aed03a60e059',
         homeAccountIdentifier: '',
-        userName: 'demo@example.net',
+        username: 'demo@example.net',
         name: 'Demo User',
         idToken: null,
-        idTokenClaims: null,
         sid: '',
-        environment: ''
+        environment: '',
+        idTokenClaims: {
+          tid: 'fake-tenant'
+        }
       }
 
       // Stub out all the functions we call and return static dummy user where required
@@ -45,17 +55,22 @@ export default {
           return new Promise((resolve) => resolve())
         },
         acquireTokenSilent() {
-          return new Promise((resolve) => resolve())
+          return new Promise((resolve) => resolve({ accessToken: '1234567890' }))
         },
         cacheStorage: {
           clear() {
             localStorage.removeItem('dummyAccount')
           }
         },
-        getAccount() {
-          return JSON.parse(localStorage.getItem('dummyAccount'))
+        getAllAccounts() {
+          return [JSON.parse(localStorage.getItem('dummyAccount'))]
         }
       }
+      return
+    }
+
+    // Can't configure if clientId blank/null/undefined
+    if (!clientId) {
       return
     }
 
@@ -98,14 +113,14 @@ export default {
   //
   // Login a user with a popup
   //
-  async login() {
+  async login(scopes = ['user.read', 'openid', 'profile', 'email']) {
     if (!msalApp) {
       return
     }
 
-    const LOGIN_SCOPES = ['user.read', 'openid', 'profile', 'email']
+    //const LOGIN_SCOPES = ['user.read', 'openid', 'profile', 'email']
     await msalApp.loginPopup({
-      scopes: LOGIN_SCOPES,
+      scopes,
       prompt: 'select_account'
     })
   },
@@ -185,5 +200,12 @@ export default {
         }
       }
     }
+  },
+
+  //
+  // Check if we have been setup & configured
+  //
+  isConfigured() {
+    return msalApp != null
   }
 }

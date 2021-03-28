@@ -4,9 +4,11 @@
       <div class="hero-body">
         <h1 class="title"><img src="./assets/logo.svg" alt="logo" class="ml-4" />MSAL and Microsoft Graph Demo</h1>
       </div>
-      <span class="gitlink is-2 title"
-        ><a href="https://github.com/benc-uk/msal-graph-vue"><i class="fab fa-github fa-fw"/></a
-      ></span>
+      <span class="gitlink is-2 title">
+        <a href="https://github.com/benc-uk/msal-graph-vue">
+          <i class="fab fa-github fa-fw" />
+        </a>
+      </span>
     </section>
 
     <div class="container is-fluid">
@@ -156,10 +158,11 @@ export default {
   async created() {
     // Basic setup of MSAL helper with client id, or give up
     if (process.env.VUE_APP_CLIENT_ID) {
-      auth.configure(process.env.VUE_APP_CLIENT_ID)
+      auth.configure(process.env.VUE_APP_CLIENT_ID, false)
 
       // Restore any cached or saved local user
       this.user = auth.user()
+      console.log(`confgied ${auth.isConfigured()}`)
     } else {
       this.error = 'VUE_APP_CLIENT_ID is not set, the app will not function! 😥'
     }
@@ -187,7 +190,7 @@ export default {
 
     // Get an access token and call graphGetSelf & graphGetPhoto
     async fetchGraphDetails() {
-      if (!this.user) {
+      if (!this.user || this.user.username == 'demo@example.net') {
         return
       }
 

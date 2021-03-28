@@ -75,7 +75,7 @@ export default {
 
   methods: {
     searchSupported() {
-      if (!this.user) {
+      if (!this.user || !this.user.idTokenClaims) {
         return false
       }
       return this.user.idTokenClaims.tid !== '9188040d-6c67-4c5b-b112-36a304b66dad'
