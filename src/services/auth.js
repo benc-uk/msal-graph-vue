@@ -43,7 +43,11 @@ export default {
       // Stub out all the functions we call and return static dummy user where required
       // Use localStorage to simulate MSAL caching and logging out
       msalApp = {
-        clientId: null,
+        config: {
+          auth: {
+            clientId: null
+          }
+        },
 
         loginPopup() {
           localStorage.setItem('dummyAccount', JSON.stringify(dummyUser))
@@ -107,7 +111,7 @@ export default {
       return null
     }
 
-    return msalApp.clientId
+    return msalApp.config.auth.clientId
   },
 
   //

@@ -162,7 +162,7 @@ export default {
 
       // Restore any cached or saved local user
       this.user = auth.user()
-      console.log(`confgied ${auth.isConfigured()}`)
+      console.log(`configured ${auth.isConfigured()}`)
     } else {
       this.error = 'VUE_APP_CLIENT_ID is not set, the app will not function! 😥'
     }
